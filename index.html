@@ -95,7 +95,7 @@
       card.style.display = "none";
 
       try {
-        const response = await fetch("https://api.scryfall.com/cards/random", {
+        const response = await fetch("https://api.scryfall.com/cards/random?q=lang%3Aen", {
           headers: {
             "Accept": "application/json"
           }
