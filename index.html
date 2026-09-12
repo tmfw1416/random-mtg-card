@@ -105,13 +105,15 @@
       display: none;
     }
 
-    /* Links */
+    /* Scryfall credit */
 
     .credit {
       margin-top: 14px;
       font-size: 0.75rem;
       color: #777;
     }
+
+    /* External links */
 
     .external-links {
       display: none;
@@ -144,6 +146,7 @@
     }
 
     @media (max-width: 450px) {
+
       #cardName {
         font-size: 1.25rem;
       }
@@ -164,18 +167,24 @@
   </style>
 </head>
 
+
 <body>
 
   <main class="app">
 
-    <!-- Card name and set -->
+    <!-- Card name -->
 
     <h1 id="cardName"></h1>
+
+    <!-- Set name -->
+
     <div id="setName"></div>
 
-    <!-- Card / loading message -->
+
+    <!-- Card -->
 
     <div class="card-area">
+
       <div id="message">
         Click the button to draw a random card.
       </div>
@@ -184,9 +193,11 @@
         id="card"
         alt="Random Magic: The Gathering card"
       >
+
     </div>
 
-    <!-- Previous / Random buttons -->
+
+    <!-- Navigation -->
 
     <div class="navigation">
 
@@ -200,15 +211,20 @@
 
     </div>
 
-    <!-- Scryfall credit -->
+
+    <!-- Credit -->
 
     <div class="credit">
       Card data and images provided by Scryfall.
     </div>
 
-    <!-- External links -->
 
-    <div class="external-links" id="externalLinks">
+    <!-- TCGplayer / Scryfall links -->
+
+    <div
+      class="external-links"
+      id="externalLinks"
+    >
 
       <a
         id="tcgLink"
@@ -220,6 +236,7 @@
         Buy on TCGplayer
         <span id="tcgPrice"></span>
       </a>
+
 
       <a
         id="scryfallLink"
@@ -238,29 +255,39 @@
 
   <script>
 
-    const button = document.getElementById("randomButton");
-    const previousButton = document.getElementById("previousButton");
+    const button =
+      document.getElementById("randomButton");
 
-    const card = document.getElementById("card");
-    const message = document.getElementById("message");
+    const previousButton =
+      document.getElementById("previousButton");
 
-    const cardName = document.getElementById("cardName");
-    const setName = document.getElementById("setName");
+    const card =
+      document.getElementById("card");
 
-    const externalLinks = document.getElementById("externalLinks");
+    const message =
+      document.getElementById("message");
 
-    const tcgLink = document.getElementById("tcgLink");
-    const tcgPrice = document.getElementById("tcgPrice");
+    const cardName =
+      document.getElementById("cardName");
 
-    const scryfallLink = document.getElementById("scryfallLink");
+    const setName =
+      document.getElementById("setName");
+
+    const externalLinks =
+      document.getElementById("externalLinks");
+
+    const tcgLink =
+      document.getElementById("tcgLink");
+
+    const tcgPrice =
+      document.getElementById("tcgPrice");
+
+    const scryfallLink =
+      document.getElementById("scryfallLink");
 
 
     /*
      * Card history
-     *
-     * Each random card gets stored here so that
-     * Previous Card can move backward through
-     * cards that have already been displayed.
      */
 
     let cardHistory = [];
@@ -269,66 +296,99 @@
 
 
     /*
-     * Draw a random English card
+     * Draw a random card
+     *
+     * The search query tells Scryfall:
+     *
+     * lang:en
+     *       English cards only
+     *
+     * game:paper
+     *       Physical/paper cards
+     *
+     * has:tcgplayer_id
+     *       Must have TCGplayer information
+     *
+     * -is:token
+     *       Exclude tokens
      */
 
     async function randomCard() {
 
       button.disabled = true;
-      button.textContent = "Loading...";
 
-      message.textContent = "Drawing a random card...";
+      button.textContent =
+        "Loading...";
 
-      card.style.display = "none";
+      message.textContent =
+        "Drawing a random card...";
 
-      cardName.style.display = "none";
-      setName.style.display = "none";
+      card.style.display =
+        "none";
 
-      externalLinks.style.display = "none";
+      cardName.style.display =
+        "none";
+
+      setName.style.display =
+        "none";
+
+      externalLinks.style.display =
+        "none";
 
 
       try {
 
-        /*
-         * lang:en tells Scryfall to only return
-         * English-language cards.
-         */
+        const searchQuery =
+          "lang:en game:paper has:tcgplayer_id -is:token";
 
-        const response = await fetch(
-          "https://api.scryfall.com/cards/random?q=lang%3Aen",
-          {
-            headers: {
-              "Accept": "application/json"
+
+        const response =
+          await fetch(
+            "https://api.scryfall.com/cards/random?q=" +
+            encodeURIComponent(searchQuery),
+            {
+              headers: {
+                "Accept": "application/json"
+              }
             }
-          }
-        );
+          );
 
 
         if (!response.ok) {
+
           throw new Error(
             "The card service returned an error."
           );
+
         }
 
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
 
         /*
-         * Save the card in our history.
-         *
-         * If the user previously clicked Previous Card,
-         * discard the cards that were ahead of the current
-         * position before adding the new random card.
+         * If we previously went backward through
+         * history, discard the cards ahead of us.
          */
 
-        if (historyPosition < cardHistory.length - 1) {
+        if (
+          historyPosition <
+          cardHistory.length - 1
+        ) {
 
           cardHistory =
-            cardHistory.slice(0, historyPosition + 1);
+            cardHistory.slice(
+              0,
+              historyPosition + 1
+            );
 
         }
 
+
+        /*
+         * Add new card to history
+         */
 
         cardHistory.push(data);
 
@@ -346,23 +406,28 @@
 
         console.error(error);
 
+
       } finally {
 
         button.disabled = false;
-        button.textContent = "Random Card";
+
+        button.textContent =
+          "Random Card";
 
       }
+
     }
 
 
     /*
-     * Display a card
+     * Display card
      */
 
     function displayCard(data) {
 
+
       /*
-       * Card image
+       * Find card image
        */
 
       let imageUrl =
@@ -371,13 +436,13 @@
 
 
       /*
-       * Some Magic cards are double-faced.
-       *
-       * If there isn't a normal image on the main card,
-       * try the first face.
+       * Handle double-faced cards
        */
 
-      if (!imageUrl && data.card_faces) {
+      if (
+        !imageUrl &&
+        data.card_faces
+      ) {
 
         imageUrl =
           data.card_faces[0]?.image_uris?.normal ||
@@ -403,7 +468,8 @@
       cardName.textContent =
         data.name || "Unknown Card";
 
-      cardName.style.display = "block";
+      cardName.style.display =
+        "block";
 
 
       /*
@@ -413,40 +479,49 @@
       setName.textContent =
         data.set_name || "";
 
-      setName.style.display = "block";
+      setName.style.display =
+        "block";
 
 
       /*
        * Card image
        */
 
-      card.onload = () => {
+      card.onload = function() {
 
-        message.style.display = "none";
-        card.style.display = "block";
+        message.style.display =
+          "none";
+
+        card.style.display =
+          "block";
 
       };
 
-      card.src = imageUrl;
+
+      card.src =
+        imageUrl;
 
 
       /*
        * TCGplayer
+       *
+       * Because the search query requires
+       * has:tcgplayer_id, this should normally
+       * always be available.
        */
 
       if (data.tcgplayer_uri) {
 
-        tcgLink.href = data.tcgplayer_uri;
+        tcgLink.href =
+          data.tcgplayer_uri;
 
-        /*
-         * Scryfall supplies the current USD price
-         * when one is available.
-         */
 
         if (data.prices?.usd) {
 
           tcgPrice.textContent =
-            " ($" + data.prices.usd + ")";
+            " ($" +
+            data.prices.usd +
+            ")";
 
         } else {
 
@@ -455,17 +530,29 @@
 
         }
 
-        tcgLink.style.display = "inline-flex";
+
+        tcgLink.style.display =
+          "inline-flex";
 
       } else {
 
-        tcgLink.style.display = "none";
+        /*
+         * This is just a safety fallback.
+         */
+
+        tcgLink.removeAttribute("href");
+
+        tcgPrice.textContent =
+          " (Unavailable)";
+
+        tcgLink.style.display =
+          "inline-flex";
 
       }
 
 
       /*
-       * Scryfall link
+       * Scryfall
        */
 
       if (data.scryfall_uri) {
@@ -476,16 +563,11 @@
         scryfallLink.style.display =
           "inline-flex";
 
-      } else {
-
-        scryfallLink.style.display =
-          "none";
-
       }
 
 
       /*
-       * Show the external links.
+       * Show external links
        */
 
       externalLinks.style.display =
@@ -495,8 +577,7 @@
       /*
        * Previous button
        *
-       * It remains hidden when this is the
-       * first card in the history.
+       * Hidden for the very first card.
        */
 
       if (historyPosition > 0) {
@@ -515,7 +596,7 @@
 
 
     /*
-     * Go back to the previous card
+     * Previous card
      */
 
     function previousCard() {
