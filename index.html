@@ -202,7 +202,7 @@
         setName.textContent = "";
         cardImage.style.display = "none";
 
-        const q = "lang:en -is:token -t:basic";
+        const q = "lang:en -is:token -t:basic -is:art_series";
         const response = await fetch(
           "https://api.scryfall.com/cards/random?q=" + encodeURIComponent(q),
           {
