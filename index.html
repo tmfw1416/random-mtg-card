@@ -14,12 +14,9 @@
       text-align: center;
     }
 
-    h1 {
-      margin-bottom: 10px;
-    }
 
     #cardName {
-      margin: 10px 0 4px;
+      margin: 0 0 4px;
       font-size: 28px;
     }
 
@@ -30,6 +27,8 @@
     }
 
     #cardImage {
+      display: block;
+      margin: 0 auto;
       max-width: 90%;
       width: 488px;
       border-radius: 10px;
@@ -101,18 +100,16 @@
 </head>
 <body>
 
-  <h1>Random Magic: The Gathering Card</h1>
-
   <div id="cardName">Click "Random Card" to begin</div>
   <div id="setName"></div>
+
+  <img id="cardImage" src="" alt="" style="display:none;">
 
   <div class="buttonRow">
     <button id="previousButton" onclick="showPreviousCard()">Previous Card</button>
     <button onclick="getRandomCard()">Random Card</button>
     <button id="nextButton" onclick="showNextCard()">Next Card</button>
   </div>
-
-  <img id="cardImage" src="" alt="" style="display:none;">
 
   <div id="purchaseLinks">
     <a id="tcgLink" class="linkButton" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
@@ -202,7 +199,7 @@
         setName.textContent = "";
         cardImage.style.display = "none";
 
-        const q = "lang:en -is:token -t:basic -is:art_series";
+        const q = "lang:en -is:token -t:basic -is:art_series -set:ugl -set:unh -set:ust -set:unf -set:und";
         const response = await fetch(
           "https://api.scryfall.com/cards/random?q=" + encodeURIComponent(q),
           {
