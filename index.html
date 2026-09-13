@@ -77,6 +77,58 @@
       margin-top: 20px;
     }
 
+    #saveButton {
+      margin-top: 0;
+    }
+
+    #savedSection {
+      display: none;
+      max-width: 600px;
+      margin: 30px auto 0;
+      text-align: center;
+    }
+
+    #savedCards {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 15px;
+    }
+
+    .savedCard {
+      padding: 15px;
+      background: #252525;
+      border-radius: 10px;
+    }
+
+    .savedCard img {
+      width: 300px;
+      max-width: 90%;
+      border-radius: 8px;
+    }
+
+    .savedCardName {
+      margin-top: 10px;
+      font-size: 20px;
+    }
+
+    .savedCardSet {
+      margin-top: 4px;
+      color: #bbb;
+    }
+
+    .savedCardLinks {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .removeButton {
+      margin-top: 10px;
+    }
+
     .credit {
       margin-top: 20px;
       color: #999;
@@ -111,6 +163,11 @@
     <button id="nextButton" onclick="showNextCard()">Next Card</button>
   </div>
 
+  <div class="buttonRow">
+    <button id="saveButton" onclick="saveCurrentCard()" disabled>Save Card</button>
+    <button onclick="toggleSavedCards()">Saved Cards</button>
+  </div>
+
   <div id="purchaseLinks">
     <a id="tcgLink" class="linkButton" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
       Buy on TCGplayer<span id="tcgPrice"></span>
@@ -119,6 +176,11 @@
     <a id="scryfallLink" class="linkButton" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
       Scryfall
     </a>
+  </div>
+
+  <div id="savedSection">
+    <div style="font-size:24px;">Saved Cards</div>
+    <div id="savedCards"></div>
   </div>
 
   <div class="credit">
@@ -137,6 +199,12 @@
     const tcgLink = document.getElementById("tcgLink");
     const tcgPrice = document.getElementById("tcgPrice");
     const scryfallLink = document.getElementById("scryfallLink");
+    const saveButton = document.getElementById("saveButton");
+    const savedSection = document.getElementById("savedSection");
+    const savedCardsContainer = document.getElementById("savedCards");
+
+    let currentCard = null;
+    const savedCards = JSON.parse(localStorage.getItem("savedMtgCards") || "[]");
 
     function updateNavigationButtons() {
       previousButton.style.display = historyPosition > 0 ? "inline-flex" : "none";
@@ -147,6 +215,7 @@
     }
 
     function displayCard(data) {
+      currentCard = data;
       cardName.textContent = data.name || "Unknown Card";
       setName.textContent = data.set_name || "";
 
@@ -191,7 +260,90 @@
       }
 
       updateNavigationButtons();
+      updateSaveButton();
     }
+
+    function updateSaveButton() {
+      if (!currentCard) {
+        saveButton.disabled = true;
+        saveButton.textContent = "Save Card";
+        return;
+      }
+
+      const alreadySaved = savedCards.some(card => card.id === currentCard.id);
+      saveButton.disabled = false;
+      saveButton.textContent = alreadySaved ? "Saved ✓" : "Save Card";
+    }
+
+    function saveCurrentCard() {
+      if (!currentCard) return;
+
+      const alreadySaved = savedCards.some(card => card.id === currentCard.id);
+      if (alreadySaved) return;
+
+      savedCards.push(currentCard);
+      localStorage.setItem("savedMtgCards", JSON.stringify(savedCards));
+      updateSaveButton();
+      renderSavedCards();
+    }
+
+    function removeSavedCard(id) {
+      const index = savedCards.findIndex(card => card.id === id);
+      if (index !== -1) {
+        savedCards.splice(index, 1);
+        localStorage.setItem("savedMtgCards", JSON.stringify(savedCards));
+        renderSavedCards();
+        updateSaveButton();
+      }
+    }
+
+    function renderSavedCards() {
+      if (savedCards.length === 0) {
+        savedCardsContainer.innerHTML = "<div style=\"color:#999;\">No saved cards yet.</div>";
+        return;
+      }
+
+      savedCardsContainer.innerHTML = savedCards.map(card => {
+        const imageUrl = card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal || "";
+        const tcgUrl = card.purchase_uris?.tcgplayer;
+        const price = card.prices?.usd;
+
+        return `
+          <div class="savedCard">
+            ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(card.name || "Magic card")}">` : ""}
+            <div class="savedCardName">${escapeHtml(card.name || "Unknown Card")}</div>
+            <div class="savedCardSet">${escapeHtml(card.set_name || "")}</div>
+            <div class="savedCardLinks">
+              ${tcgUrl ? `<a class="linkButton" href="${tcgUrl}" target="_blank" rel="noopener noreferrer">Buy on TCGplayer${price ? " ($" + price + ")" : ""}</a>` : ""}
+              ${card.scryfall_uri ? `<a class="linkButton" href="${card.scryfall_uri}" target="_blank" rel="noopener noreferrer">Scryfall</a>` : ""}
+            </div>
+            <button class="removeButton" onclick="removeSavedCard('${card.id}')">Remove</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>\"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function toggleSavedCards() {
+      const isHidden = savedSection.style.display === "none" || savedSection.style.display === "";
+      savedSection.style.display = isHidden ? "block" : "none";
+
+      if (isHidden) {
+        renderSavedCards();
+        savedSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    renderSavedCards();
 
     async function getRandomCard() {
       try {
