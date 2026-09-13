@@ -351,7 +351,7 @@
         setName.textContent = "";
         cardImage.style.display = "none";
 
-        const q = "lang:en -is:token -t:basic -is:art_series -set:ugl -set:unh -set:ust -set:unf -set:und";
+        const q = "lang:en -is:token -t:basic -is:art_series -is:emblem -set:ugl -set:unh -set:ust -set:unf -set:und -set:unk -set:fjmp -set:fj22 -set:fdmu -set:fone -set:fmom -set:fj25";
         const response = await fetch(
           "https://api.scryfall.com/cards/random?q=" + encodeURIComponent(q),
           {
